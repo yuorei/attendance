@@ -57,7 +57,7 @@ resource "aws_lambda_event_source_mapping" "dynamodb" {
 # DynamoDBストリーム読み取り権限ポリシー
 data "aws_iam_policy_document" "stream_access" {
   statement {
-    effect  = "Allow"
+    effect = "Allow"
     actions = [
       "dynamodb:GetRecords",
       "dynamodb:GetShardIterator",
@@ -82,13 +82,17 @@ resource "aws_iam_role_policy_attachment" "stream_access" {
 # DynamoDB PutItem/UpdateItem 書き込み権限ポリシー
 data "aws_iam_policy_document" "dynamodb_write_access" {
   statement {
-    effect  = "Allow"
+    effect = "Allow"
     actions = [
+      "dynamodb:Query",
       "dynamodb:PutItem",
       "dynamodb:UpdateItem"
     ]
     resources = [
-      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.table_name}"
+      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.table_name}",
+      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.table_name}/index/gsi_workplace_timestamp",
+      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.table_name2}/index/CompositeKey-index",
+      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.table_name2}"
     ]
   }
 }
