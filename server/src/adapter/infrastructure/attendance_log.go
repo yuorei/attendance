@@ -209,7 +209,12 @@ func (i *Infrastructure) DBSubscribeWorkplace(ctx context.Context, id, teamID, c
 	return &newBinding, nil
 }
 
-func (i *Infrastructure) DBGetAttendanceLogListByUserAndMonth(ctx context.Context, workplaceId, userId, year, month string) ([]domain.AttendanceLog, error) {
+func (i *Infrastructure) DBGetAttendanceLogListByUserAndMonth(ctx context.Context, teamID, channelID, userID, year, month string) ([]domain.AttendanceLog, error) {
+	binding, err := i.getWorkplaceBinding(ctx, teamID, channelID, userID)
+	if err != nil {
+		return nil, err
+	}
+
 	yearMonth := fmt.Sprintf("%s-%s", year, month) // 例: "2025-05"
 
 	// プレースホルダー #ts を定義し、実際の属性名 "timestamp" にマッピング
@@ -219,7 +224,7 @@ func (i *Infrastructure) DBGetAttendanceLogListByUserAndMonth(ctx context.Contex
 
 	// プレースホルダー :workplaceId と :yearMonth の値を定義
 	expressionAttributeValues := map[string]types.AttributeValue{
-		":workplaceId": &types.AttributeValueMemberS{Value: workplaceId},
+		":workplaceId": &types.AttributeValueMemberS{Value: binding.ID},
 		":yearMonth":   &types.AttributeValueMemberS{Value: yearMonth},
 	}
 
@@ -264,6 +269,13 @@ func (i *Infrastructure) DBGetAttendanceLogListByUserAndMonth(ctx context.Contex
 	// 	}
 	// }
 	// return filteredLogs, nil
+
+	if len(logs) == 0 {
+		return nil, fmt.Errorf("no attendance logs found for user %s in month %s-%s", userID, year, month)
+	}
+
+	// TODO: WorkplaceIDに職場名を入れているのでこの実装方法を直す
+	logs[0].WorkplaceID = binding.Workplace
 
 	return logs, nil
 }

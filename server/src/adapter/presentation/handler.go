@@ -22,12 +22,13 @@ func (h *Handler) HealthCheck(c echo.Context) error {
 }
 
 func (h *Handler) AttendanceLogListByUserAndMonth(c echo.Context) error {
-	workplaceId := c.Param("workplace_id")
+	teamId := c.Param("team_id")
+	channelId := c.Param("channel_id")
 	userId := ""
 	year := c.Param("year")
 	month := c.Param("month")
 
-	attendanceLogs, err := h.usecase.GetAttendanceLogListByUserAndMonth(c.Request().Context(), workplaceId, userId, year, month)
+	attendanceLogs, err := h.usecase.GetAttendanceLogListByUserAndMonth(c.Request().Context(), teamId, channelId, userId, year, month)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
