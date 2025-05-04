@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/yuorei/attendance/src/domain"
@@ -18,13 +19,41 @@ func NewAttendanceLogRepository(attendanceLogRepository port.AttendanceLogReposi
 	}
 }
 
-func (r *Repository) AddAttendanceLog(ctx context.Context, campaignID string) (*domain.AttendanceLog, error) {
+func (r *Repository) AddAttendanceLogCheckin(ctx context.Context, teamId, channelId, userId, action string) (*domain.AttendanceLog, error) {
 	u, err := uuid.NewV7()
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := r.attendanceLogRepository.attendanceLogRepository.DBAddAttendanceLog(ctx, u.String())
+	result, err := r.attendanceLogRepository.attendanceLogRepository.DBAddAttendanceLogCheckin(ctx, u.String(), teamId, channelId, userId, action, time.Now())
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (r *Repository) AddAttendanceLogCheckout(ctx context.Context, teamId, channelId, userId, action string) (*domain.AttendanceLog, error) {
+	u, err := uuid.NewV7()
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := r.attendanceLogRepository.attendanceLogRepository.DBAddAttendanceLogCheckout(ctx, u.String(), teamId, channelId, userId, action, time.Now())
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (r *Repository) SubscribeWorkplace(ctx context.Context, teamId, channelId, userId, workplace string) (*domain.WorkplaceBindings, error) {
+	u, err := uuid.NewV7()
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := r.attendanceLogRepository.attendanceLogRepository.DBSubscribeWorkplace(ctx, u.String(), teamId, channelId, userId, workplace, time.Now())
 	if err != nil {
 		return nil, err
 	}

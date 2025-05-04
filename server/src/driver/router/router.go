@@ -21,7 +21,7 @@ func NewRouter() *echoadapter.EchoLambda {
 	e.Use(middleware.Recover())
 
 	e.GET("/health", handler.HealthCheck)
-	e.POST("/slack/events", handler.Handler2)
+	e.POST("/slack/slash/attendance", handler.AttendanceSlach)
 
 	if os.Getenv("ENV") == "local" {
 		e.Logger.Fatal(e.Start(":8080"))

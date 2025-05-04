@@ -2,18 +2,24 @@ package domain
 
 import "time"
 
-// DynamoDBに保存するレコード
-// type AttendanceRecord struct {
-// 	UserID    string `json:"user_id"`    // パーティションキー
-// 	Timestamp string `json:"timestamp"`  // ソートキー
-// 	EventType string `json:"event_type"` // 出勤などの種類
-// }
-
 type AttendanceLog struct {
-	ID          string    `dynamodbav:"id"`           // PartitionKey：必須
-	UserID      string    `dynamodbav:"user_id"`      // PartitionKey：必須
-	Timestamp   time.Time `dynamodbav:"timestamp"`    // アクション発生時刻（SortKey）
-	Action      string    `dynamodbav:"action"`       // 任意
-	ChannelID   string    `dynamodbav:"channel_id"`   // 任意
-	WorkplaceID string    `dynamodbav:"workplace_id"` // 任意
+	ID          string    `dynamodbav:"id"`
+	TeamID      string    `dynamodbav:"team_id"`
+	UserID      string    `dynamodbav:"user_id"`
+	Timestamp   time.Time `dynamodbav:"timestamp"`
+	Action      string    `dynamodbav:"action"`
+	ChannelID   string    `dynamodbav:"channel_id"`
+	WorkplaceID string    `dynamodbav:"workplace_id"`
+}
+
+type WorkplaceBindings struct {
+	ID           string     `dynamodbav:"id"`
+	TeamId       string     `dynamodbav:"team_id"`
+	CannelId     string     `dynamodbav:"channel_id"`
+	UserId       string     `dynamodbav:"user_id"`
+	Workplace    string     `dynamodbav:"workplace"`
+	CreatedAt    time.Time  `dynamodbav:"created_at"`
+	UpdatedAt    time.Time  `dynamodbav:"updated_at"`
+	DeletedAt    *time.Time `dynamodbav:"deleted_at"`
+	CompositeKey string     `dynamodbav:"composite_key"`
 }
