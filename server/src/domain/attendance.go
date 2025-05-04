@@ -3,13 +3,13 @@ package domain
 import "time"
 
 type AttendanceLog struct {
-	ID          string    `dynamodbav:"id"`
-	TeamID      string    `dynamodbav:"team_id"`
-	UserID      string    `dynamodbav:"user_id"`
-	Timestamp   time.Time `dynamodbav:"timestamp"`
-	Action      string    `dynamodbav:"action"`
-	ChannelID   string    `dynamodbav:"channel_id"`
-	WorkplaceID string    `dynamodbav:"workplace_id"`
+	ID          string `dynamodbav:"id"`
+	TeamID      string `dynamodbav:"team_id"`
+	UserID      string `dynamodbav:"user_id"`
+	Timestamp   string `dynamodbav:"timestamp"` // DynamoDBの属性タイプがSなのでstringに変更 (time.TimeでもUnmarshal可能だが、クエリとの整合性を考慮)
+	Action      string `dynamodbav:"action"`
+	ChannelID   string `dynamodbav:"channel_id"`
+	WorkplaceID string `dynamodbav:"workplace_id"`
 }
 
 type WorkplaceBindings struct {

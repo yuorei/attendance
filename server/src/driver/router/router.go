@@ -21,6 +21,7 @@ func NewRouter() *echoadapter.EchoLambda {
 	e.Use(middleware.Recover())
 
 	e.GET("/health", handler.HealthCheck)
+	e.GET("/attendance/:workplace_id/:year/:month", handler.AttendanceLogListByUserAndMonth)
 	e.POST("/slack/slash/attendance", handler.AttendanceSlach)
 
 	if os.Getenv("ENV") == "local" {

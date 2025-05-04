@@ -60,3 +60,12 @@ func (r *Repository) SubscribeWorkplace(ctx context.Context, teamId, channelId, 
 
 	return result, nil
 }
+
+func (r *Repository) GetAttendanceLogListByUserAndMonth(ctx context.Context, workplaceId, userId, year, month string) ([]domain.AttendanceLog, error) {
+	result, err := r.attendanceLogRepository.attendanceLogRepository.DBGetAttendanceLogListByUserAndMonth(ctx, workplaceId, userId, year, month)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}

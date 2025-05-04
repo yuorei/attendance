@@ -20,3 +20,17 @@ func NewHandler(repository *usecase.Repository) *Handler {
 func (h *Handler) HealthCheck(c echo.Context) error {
 	return c.String(http.StatusOK, "OK")
 }
+
+func (h *Handler) AttendanceLogListByUserAndMonth(c echo.Context) error {
+	workplaceId := c.Param("workplace_id")
+	userId := ""
+	year := c.Param("year")
+	month := c.Param("month")
+
+	attendanceLogs, err := h.usecase.GetAttendanceLogListByUserAndMonth(c.Request().Context(), workplaceId, userId, year, month)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, attendanceLogs)
+}

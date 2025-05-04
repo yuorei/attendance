@@ -103,7 +103,7 @@ func (i *Infrastructure) DBAddAttendanceLogStart(ctx context.Context, id, teamID
 		ID:          id,
 		TeamID:      teamID,
 		UserID:      binding.UserId,
-		Timestamp:   timestamp,
+		Timestamp:   timestamp.String(),
 		Action:      action,
 		ChannelID:   binding.CannelId,
 		WorkplaceID: binding.ID,
@@ -138,7 +138,7 @@ func (i *Infrastructure) DBAddAttendanceLogEnd(ctx context.Context, id, teamID, 
 		ID:          id,
 		TeamID:      teamID,
 		UserID:      binding.UserId,
-		Timestamp:   timestamp,
+		Timestamp:   timestamp.String(),
 		Action:      action,
 		ChannelID:   binding.CannelId,
 		WorkplaceID: binding.ID,
@@ -207,4 +207,63 @@ func (i *Infrastructure) DBSubscribeWorkplace(ctx context.Context, id, teamID, c
 	}
 
 	return &newBinding, nil
+}
+
+func (i *Infrastructure) DBGetAttendanceLogListByUserAndMonth(ctx context.Context, workplaceId, userId, year, month string) ([]domain.AttendanceLog, error) {
+	yearMonth := fmt.Sprintf("%s-%s", year, month) // 例: "2025-05"
+
+	// プレースホルダー #ts を定義し、実際の属性名 "timestamp" にマッピング
+	expressionAttributeNames := map[string]string{
+		"#ts": "timestamp",
+	}
+
+	// プレースホルダー :workplaceId と :yearMonth の値を定義
+	expressionAttributeValues := map[string]types.AttributeValue{
+		":workplaceId": &types.AttributeValueMemberS{Value: workplaceId},
+		":yearMonth":   &types.AttributeValueMemberS{Value: yearMonth},
+	}
+
+	input := &dynamodb.QueryInput{
+		TableName: aws.String(tableAttendanceLog),
+		// GSI名を指定
+		IndexName: aws.String(indexWorkplaceTimestamp),
+		// KeyConditionExpression でプレースホルダー #ts を使用
+		KeyConditionExpression: aws.String("workplace_id = :workplaceId and begins_with(#ts, :yearMonth)"),
+		// ExpressionAttributeNames を追加
+		ExpressionAttributeNames: expressionAttributeNames,
+		// ExpressionAttributeValues は変更なし
+		ExpressionAttributeValues: expressionAttributeValues,
+		// userIdでフィルタリングする場合はFilterExpressionを追加 (GSIに含まれていない属性でのフィルタ)
+		// FilterExpression: aws.String("user_id = :userId"),
+		// ExpressionAttributeValues[":userId"] = &types.AttributeValueMemberS{Value: userId},
+		// 注意: FilterExpressionはQueryの後に行われるため、大量のデータを読み込んだ後にフィルタリングすることになり、
+		//       コスト効率が悪くなる可能性があります。可能であればGSIのキー設計を見直すか、
+		//       別の方法（例：複合ソートキー user_id#timestamp など）を検討してください。
+	}
+
+	output, err := i.db.Database.Query(ctx, input)
+	if err != nil {
+		// エラー内容をより詳細に出力するとデバッグに役立ちます
+		// log.Printf("DynamoDB Query Error: %v, RequestInput: %+v", err, input)
+		return nil, fmt.Errorf("failed to get AttendanceLogListByUserAndMonth from GSI %s: %w", indexWorkplaceTimestamp, err)
+	}
+
+	var logs []domain.AttendanceLog
+	if err := attributevalue.UnmarshalListOfMaps(output.Items, &logs); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal AttendanceLogListByUserAndMonth: %w", err)
+	}
+
+	// GSIにはuser_idが含まれている (projection_type = "ALL" のため) ので、
+	// 必要であればここでさらにGo側でuserIdによるフィルタリングを行うこともできますが、
+	// FilterExpressionを使う方が一般的です。
+	// もしFilterExpressionを使わない場合:
+	// filteredLogs := []AttendanceLog{}
+	// for _, log := range logs {
+	// 	if log.UserID == userId {
+	// 		filteredLogs = append(filteredLogs, log)
+	// 	}
+	// }
+	// return filteredLogs, nil
+
+	return logs, nil
 }
