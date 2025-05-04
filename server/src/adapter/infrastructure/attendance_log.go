@@ -87,7 +87,7 @@ func (i *Infrastructure) putAttendanceLog(ctx context.Context, log *domain.Atten
 	return nil
 }
 
-func (i *Infrastructure) DBAddAttendanceLogCheckin(ctx context.Context, id, teamID, channelID, userID, action string, timestamp time.Time) (*domain.AttendanceLog, error) {
+func (i *Infrastructure) DBAddAttendanceLogStart(ctx context.Context, id, teamID, channelID, userID, action string, timestamp time.Time) (*domain.AttendanceLog, error) {
 	binding, err := i.getWorkplaceBinding(ctx, teamID, channelID, userID)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (i *Infrastructure) DBAddAttendanceLogCheckin(ctx context.Context, id, team
 	if err != nil {
 		return nil, err
 	}
-	if latestLog != nil && latestLog.Action == "checkin" {
+	if latestLog != nil && latestLog.Action == "start" {
 		return nil, fmt.Errorf("already checked in")
 	}
 	newLog := &domain.AttendanceLog{
@@ -118,7 +118,7 @@ func (i *Infrastructure) DBAddAttendanceLogCheckin(ctx context.Context, id, team
 	return newLog, nil
 }
 
-func (i *Infrastructure) DBAddAttendanceLogCheckout(ctx context.Context, id, teamID, channelID, userID, action string, timestamp time.Time) (*domain.AttendanceLog, error) {
+func (i *Infrastructure) DBAddAttendanceLogEnd(ctx context.Context, id, teamID, channelID, userID, action string, timestamp time.Time) (*domain.AttendanceLog, error) {
 	binding, err := i.getWorkplaceBinding(ctx, teamID, channelID, userID)
 	if err != nil {
 		return nil, err
@@ -128,9 +128,9 @@ func (i *Infrastructure) DBAddAttendanceLogCheckout(ctx context.Context, id, tea
 		return nil, err
 	}
 	if latestLog == nil {
-		return nil, fmt.Errorf("no checkin log found")
+		return nil, fmt.Errorf("no start log found")
 	}
-	if latestLog.Action == "checkout" {
+	if latestLog.Action == "end" {
 		return nil, fmt.Errorf("already checked out")
 	}
 

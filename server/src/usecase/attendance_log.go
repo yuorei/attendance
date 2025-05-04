@@ -19,13 +19,13 @@ func NewAttendanceLogRepository(attendanceLogRepository port.AttendanceLogReposi
 	}
 }
 
-func (r *Repository) AddAttendanceLogCheckin(ctx context.Context, teamId, channelId, userId, action string) (*domain.AttendanceLog, error) {
+func (r *Repository) AddAttendanceLogStart(ctx context.Context, teamId, channelId, userId, action string) (*domain.AttendanceLog, error) {
 	u, err := uuid.NewV7()
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := r.attendanceLogRepository.attendanceLogRepository.DBAddAttendanceLogCheckin(ctx, u.String(), teamId, channelId, userId, action, time.Now())
+	result, err := r.attendanceLogRepository.attendanceLogRepository.DBAddAttendanceLogStart(ctx, u.String(), teamId, channelId, userId, action, time.Now())
 	if err != nil {
 		return nil, err
 	}
@@ -33,13 +33,13 @@ func (r *Repository) AddAttendanceLogCheckin(ctx context.Context, teamId, channe
 	return result, nil
 }
 
-func (r *Repository) AddAttendanceLogCheckout(ctx context.Context, teamId, channelId, userId, action string) (*domain.AttendanceLog, error) {
+func (r *Repository) AddAttendanceLogEnd(ctx context.Context, teamId, channelId, userId, action string) (*domain.AttendanceLog, error) {
 	u, err := uuid.NewV7()
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := r.attendanceLogRepository.attendanceLogRepository.DBAddAttendanceLogCheckout(ctx, u.String(), teamId, channelId, userId, action, time.Now())
+	result, err := r.attendanceLogRepository.attendanceLogRepository.DBAddAttendanceLogEnd(ctx, u.String(), teamId, channelId, userId, action, time.Now())
 	if err != nil {
 		return nil, err
 	}
