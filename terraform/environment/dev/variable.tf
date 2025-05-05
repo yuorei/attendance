@@ -16,6 +16,12 @@ variable "table_name" {
   default     = "AttendanceLog"
 }
 
+variable "table_name2" {
+  description = "DynamoDBテーブルの名前2"
+  type        = string
+  default     = "WorkplaceBindings"
+}
+
 variable "hash_key" {
   description = "DynamoDBのハッシュキー"
   type        = string

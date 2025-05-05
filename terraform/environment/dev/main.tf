@@ -30,6 +30,7 @@ module "lambda" {
   dynamodb_stream_arn   = module.dynamodb.stream_arn
   tags                  = var.tags
   table_name            = module.dynamodb.table_name
+  table_name2           = var.table_name2
   aws_region            = var.aws_region
 }
 

@@ -1,11 +1,11 @@
 variable "region" {
   description = "The AWS region for the resources."
   type        = string
-  default     = "ap-northeast-1"  # Default region value, you can change this if needed
+  default     = "ap-northeast-1"
 }
 variable "lambda_arn" { type = string }
-variable "tags"       { type = map(string) }
-variable "stage_name" { 
+variable "tags" { type = map(string) }
+variable "stage_name" {
   description = "Lambda function name"
   type        = string
 }
