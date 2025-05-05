@@ -21,17 +21,18 @@ func (h *Handler) HealthCheck(c echo.Context) error {
 	return c.String(http.StatusOK, "OK")
 }
 
-func (h *Handler) AttendanceLogListByUserAndMonth(c echo.Context) error {
-	teamId := c.Param("team_id")
-	channelId := c.Param("channel_id")
-	userId := ""
-	year := c.Param("year")
-	month := c.Param("month")
+// 今は使わない
+// func (h *Handler) AttendanceLogListByUserAndMonth(c echo.Context) error {
+// 	teamId := c.Param("team_id")
+// 	channelId := c.Param("channel_id")
+// 	userId := ""
+// 	year := c.Param("year")
+// 	month := c.Param("month")
 
-	attendanceLogs, err := h.usecase.GetAttendanceLogListByUserAndMonth(c.Request().Context(), teamId, channelId, userId, year, month)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
+// 	attendanceLogs, err := h.usecase.GetAttendanceLogListByUserAndMonth(c.Request().Context(), teamId, channelId, userId, year, month)
+// 	if err != nil {
+// 		return c.JSON(http.StatusInternalServerError, err.Error())
+// 	}
 
-	return c.JSON(http.StatusOK, attendanceLogs)
-}
+// 	return c.JSON(http.StatusOK, attendanceLogs)
+// }
