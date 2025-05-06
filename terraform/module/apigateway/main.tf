@@ -1,6 +1,6 @@
 # REST API本体
 resource "aws_api_gateway_rest_api" "this" {
-  name        = "attendance-api"
+  name        = "attendance-api-${var.env}"
   description = "Attendance REST API"
 }
 

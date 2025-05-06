@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -12,9 +13,9 @@ import (
 	"github.com/yuorei/attendance/src/domain"
 )
 
-const (
-	tableWorkplaceBindings  = "WorkplaceBindings"
-	tableAttendanceLog      = "AttendanceLog"
+var (
+	tableWorkplaceBindings  = "WorkplaceBindings-" + os.Getenv("ENV")
+	tableAttendanceLog      = "AttendanceLog-" + os.Getenv("ENV")
 	indexCompositeKey       = "CompositeKey-index"
 	indexWorkplaceTimestamp = "gsi_workplace_timestamp"
 )

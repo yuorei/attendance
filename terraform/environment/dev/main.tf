@@ -18,20 +18,27 @@ module "dynamodb" {
   hash_key      = "id"
   hash_key_type = "S"
   tags          = var.tags
+  env           = var.env
 }
 
 module "lambda" {
-  source                = "../../module/lambda"
-  function_name         = "${var.env}-${var.lambda_function_name}"
-  handler               = "bootstrap"
-  runtime               = "provided.al2023"
-  filename              = var.lambda_zip_path # 先に zip 済みバイナリを配置
-  environment_variables = { TABLE_NAME = module.dynamodb.table_name }
-  dynamodb_stream_arn   = module.dynamodb.stream_arn
-  tags                  = var.tags
-  table_name            = module.dynamodb.table_name
-  table_name2           = var.table_name2
-  aws_region            = var.aws_region
+  source        = "../../module/lambda"
+  function_name = "${var.lambda_function_name}-${var.env}"
+  handler       = "bootstrap"
+  runtime       = "provided.al2023"
+  filename      = var.lambda_zip_path # 先に zip 済みバイナリを配置
+  environment_variables = {
+    TABLE_NAME        = module.dynamodb.table_name
+    OTEL_ENDPOINT     = var.otel_endpoint
+    OTEL_TOKEN        = var.otel_token
+    OTEL_SERVICE_NAME = "${var.lambda_function_name}-${var.env}"
+    ENV               = var.env
+  }
+  dynamodb_stream_arn = module.dynamodb.stream_arn
+  tags                = var.tags
+  table_name          = module.dynamodb.table_name
+  table_name2         = module.dynamodb.table_name2
+  aws_region          = var.aws_region
 }
 
 module "apigateway" {
@@ -41,4 +48,5 @@ module "apigateway" {
   stage_name        = var.env
   lambda_name       = module.lambda.function_name
   lambda_invoke_arn = module.lambda.invoke_arn
+  env               = var.env
 }

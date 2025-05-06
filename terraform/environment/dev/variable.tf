@@ -66,7 +66,19 @@ variable "lambda_zip_path" {
 variable "lambda_environment_variables" {
   description = "Lambda関数の環境変数"
   type        = map(string)
-  default     = {}
+  default = {
+    ENV = "dev"
+  }
+}
+
+variable "otel_endpoint" {
+  type        = string
+  description = "OpenTelemetryのエンドポイント"
+}
+
+variable "otel_token" {
+  type        = string
+  description = "OpenTelemetryのトークン"
 }
 
 variable "tags" {
@@ -74,7 +86,7 @@ variable "tags" {
   type        = map(string)
   default = {
     Environment = "dev"
-    Project     = "example"
+    Project     = "attendance-api-server"
   }
 }
 
