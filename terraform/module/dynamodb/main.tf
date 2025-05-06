@@ -1,5 +1,5 @@
 resource "aws_dynamodb_table" "this" {
-  name             = var.table_name
+  name             = "${var.table_name}-${var.env}"
   billing_mode     = "PAY_PER_REQUEST"
   hash_key         = var.hash_key
   stream_enabled   = true
@@ -33,7 +33,7 @@ resource "aws_dynamodb_table" "this" {
 
 
 resource "aws_dynamodb_table" "workplace_bindings" {
-  name             = "WorkplaceBindings"
+  name             = "WorkplaceBindings-${var.env}"
   billing_mode     = "PAY_PER_REQUEST"
   hash_key         = "id" # 主キーは id
   stream_enabled   = true
@@ -44,7 +44,7 @@ resource "aws_dynamodb_table" "workplace_bindings" {
     name = "id"
     type = "S"
   }
-  
+
   attribute {
     name = "composite_key"
     type = "S"
