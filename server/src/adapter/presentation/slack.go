@@ -24,21 +24,21 @@ func (h *Handler) AttendanceSlach(c echo.Context) error {
 	}
 	var message string
 	switch s.Command {
-	case "/start-work":
+	case "/start-work", "/start-work-dev":
 		attendanceLog, err := h.usecase.AddAttendanceLogStart(c.Request().Context(), s.TeamID, s.ChannelID, s.UserID, START)
 		if err != nil {
 			fmt.Println("Error: /start-work :", err.Error())
 			return c.JSON(http.StatusOK, slack.Msg{Text: "Failed to add attendance In log: " + err.Error()})
 		}
 		message = fmt.Sprintf("%s: 出勤", attendanceLog.WorkplaceID)
-	case "/end-work":
+	case "/end-work", "/end-work-dev":
 		attendanceLog, err := h.usecase.AddAttendanceLogEnd(c.Request().Context(), s.TeamID, s.ChannelID, s.UserID, END)
 		if err != nil {
 			fmt.Println("Error: /end-work :", err.Error())
 			return c.JSON(http.StatusOK, slack.Msg{Text: "Failed to add attendance log: " + err.Error()})
 		}
 		message = fmt.Sprintf("%s: 退勤", attendanceLog.WorkplaceID)
-	case "/subscribe-workplace":
+	case "/subscribe-workplace", "/subscribe-workplace-dev":
 		workspaceName := s.Text
 		_, err := h.usecase.SubscribeWorkplace(c.Request().Context(), s.TeamID, s.ChannelID, s.UserID, workspaceName)
 		if err != nil {
@@ -46,7 +46,7 @@ func (h *Handler) AttendanceSlach(c echo.Context) error {
 			return c.JSON(http.StatusOK, slack.Msg{Text: "Failed to add attendance log: " + err.Error()})
 		}
 		message = fmt.Sprintf("職場登録完了: %s", workspaceName)
-	case "/monthly-hours":
+	case "/monthly-hours", "/monthly-hours-dev":
 		// 年月の形式はYYYYMM
 		yearMonth := s.Text
 		if len(yearMonth) != 6 {
@@ -60,14 +60,13 @@ func (h *Handler) AttendanceSlach(c echo.Context) error {
 			return c.JSON(http.StatusOK, slack.Msg{Text: "Failed to get attendance log: " + err.Error()})
 		}
 		if len(attendanceLogs) == 0 {
-			message = fmt.Sprintf("出勤記録がありません。")
+			message = "出勤記録がありません。"
 			return c.JSON(http.StatusOK, slack.Msg{Text: message})
 		}
 
 		workplaceName := attendanceLogs[0].WorkplaceID
 		message = FormatAttendance(attendanceLogs, workplaceName)
-
-	case "/help-attendance":
+	case "/help-attendance", "/help-attendance-dev":
 		message = "以下のコマンドが利用できます。\n" +
 			"/start-work: 出勤\n" +
 			"/end-work: 退勤\n" +
