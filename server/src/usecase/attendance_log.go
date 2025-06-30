@@ -25,7 +25,9 @@ func (r *Repository) AddAttendanceLogStart(ctx context.Context, teamId, channelI
 		return nil, err
 	}
 
-	result, err := r.attendanceLogRepository.attendanceLogRepository.DBAddAttendanceLogStart(ctx, u.String(), teamId, channelId, userId, action, time.Now())
+	jst, _ := time.LoadLocation("Asia/Tokyo")
+	now := time.Now().In(jst)
+	result, err := r.attendanceLogRepository.attendanceLogRepository.DBAddAttendanceLogStart(ctx, u.String(), teamId, channelId, userId, action, now)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +41,9 @@ func (r *Repository) AddAttendanceLogEnd(ctx context.Context, teamId, channelId,
 		return nil, err
 	}
 
-	result, err := r.attendanceLogRepository.attendanceLogRepository.DBAddAttendanceLogEnd(ctx, u.String(), teamId, channelId, userId, action, time.Now())
+	jst, _ := time.LoadLocation("Asia/Tokyo")
+	now := time.Now().In(jst)
+	result, err := r.attendanceLogRepository.attendanceLogRepository.DBAddAttendanceLogEnd(ctx, u.String(), teamId, channelId, userId, action, now)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +57,9 @@ func (r *Repository) SubscribeWorkplace(ctx context.Context, teamId, channelId, 
 		return nil, err
 	}
 
-	result, err := r.attendanceLogRepository.attendanceLogRepository.DBSubscribeWorkplace(ctx, u.String(), teamId, channelId, userId, workplace, time.Now())
+	jst, _ := time.LoadLocation("Asia/Tokyo")
+	now := time.Now().In(jst)
+	result, err := r.attendanceLogRepository.attendanceLogRepository.DBSubscribeWorkplace(ctx, u.String(), teamId, channelId, userId, workplace, now)
 	if err != nil {
 		return nil, err
 	}
