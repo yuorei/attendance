@@ -49,6 +49,12 @@ func (h *Handler) AttendanceSlach(c echo.Context) error {
 	case "/monthly-hours", "/monthly-hours-dev":
 		// 年月の形式はYYYYMM
 		yearMonth := s.Text
+		if yearMonth == "" {
+			// テキストが空の場合、日本時間での現在の年月を使用
+			jst, _ := time.LoadLocation("Asia/Tokyo")
+			now := time.Now().In(jst)
+			yearMonth = now.Format("200601") // YYYYMM format
+		}
 		if len(yearMonth) != 6 {
 			return c.JSON(http.StatusOK, slack.Msg{Text: "年月の形式が不正です。"})
 		}
