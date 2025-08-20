@@ -280,3 +280,50 @@ func (i *Infrastructure) DBGetAttendanceLogListByUserAndMonth(ctx context.Contex
 
 	return logs, nil
 }
+
+func (i *Infrastructure) DBUpdateAttendanceLog(ctx context.Context, id string, newTimestamp time.Time) (*domain.AttendanceLog, error) {
+	timestampStr := newTimestamp.String()
+
+	updateInput := &dynamodb.UpdateItemInput{
+		TableName: aws.String(tableAttendanceLog),
+		Key: map[string]types.AttributeValue{
+			"id": &types.AttributeValueMemberS{Value: id},
+		},
+		UpdateExpression: aws.String("SET #ts = :timestamp"),
+		ExpressionAttributeNames: map[string]string{
+			"#ts": "timestamp",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":timestamp": &types.AttributeValueMemberS{Value: timestampStr},
+		},
+		ReturnValues: types.ReturnValueAllNew,
+	}
+
+	output, err := i.db.Database.UpdateItem(ctx, updateInput)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update AttendanceLog: %w", err)
+	}
+
+	var updatedLog domain.AttendanceLog
+	if err := attributevalue.UnmarshalMap(output.Attributes, &updatedLog); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal updated AttendanceLog: %w", err)
+	}
+
+	return &updatedLog, nil
+}
+
+func (i *Infrastructure) DBDeleteAttendanceLog(ctx context.Context, id string) error {
+	deleteInput := &dynamodb.DeleteItemInput{
+		TableName: aws.String(tableAttendanceLog),
+		Key: map[string]types.AttributeValue{
+			"id": &types.AttributeValueMemberS{Value: id},
+		},
+	}
+
+	_, err := i.db.Database.DeleteItem(ctx, deleteInput)
+	if err != nil {
+		return fmt.Errorf("failed to delete AttendanceLog: %w", err)
+	}
+
+	return nil
+}

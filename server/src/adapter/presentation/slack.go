@@ -72,12 +72,51 @@ func (h *Handler) AttendanceSlach(c echo.Context) error {
 
 		workplaceName := attendanceLogs[0].WorkplaceID
 		message = FormatAttendance(attendanceLogs, workplaceName)
+	case "/edit-attendance", "/edit-attendance-dev":
+		// 形式: <id> <新しい時刻(YYYY-MM-DD HH:MM)>
+		parts := strings.Fields(s.Text)
+		if len(parts) < 2 {
+			return c.JSON(http.StatusOK, slack.Msg{Text: "使用方法: /edit-attendance <ID> <新しい時刻(YYYY-MM-DD HH:MM)>"})
+		}
+
+		id := parts[0]
+		newTimeStr := strings.Join(parts[1:], " ")
+
+		jst, _ := time.LoadLocation("Asia/Tokyo")
+		newTime, err := time.ParseInLocation("2006-01-02 15:04", newTimeStr, jst)
+		if err != nil {
+			return c.JSON(http.StatusOK, slack.Msg{Text: "時刻の形式が不正です。形式: YYYY-MM-DD HH:MM"})
+		}
+
+		updatedLog, err := h.usecase.UpdateAttendanceLog(c.Request().Context(), id, newTime)
+		if err != nil {
+			fmt.Println("Error: /edit-attendance :", err.Error())
+			return c.JSON(http.StatusOK, slack.Msg{Text: "勤怠記録の更新に失敗しました: " + err.Error()})
+		}
+
+		message = fmt.Sprintf("勤怠記録を更新しました\nID: %s\n新しい時刻: %s", updatedLog.ID, newTime.Format("2006-01-02 15:04"))
+	case "/delete-attendance", "/delete-attendance-dev":
+		// 形式: <id>
+		id := strings.TrimSpace(s.Text)
+		if id == "" {
+			return c.JSON(http.StatusOK, slack.Msg{Text: "使用方法: /delete-attendance <ID>"})
+		}
+
+		err := h.usecase.DeleteAttendanceLog(c.Request().Context(), id)
+		if err != nil {
+			fmt.Println("Error: /delete-attendance :", err.Error())
+			return c.JSON(http.StatusOK, slack.Msg{Text: "勤怠記録の削除に失敗しました: " + err.Error()})
+		}
+
+		message = fmt.Sprintf("勤怠記録を削除しました\nID: %s", id)
 	case "/help-attendance", "/help-attendance-dev":
 		message = "以下のコマンドが利用できます。\n" +
 			"/start-work: 出勤\n" +
 			"/end-work: 退勤\n" +
 			"/subscribe-workplace: 職場登録\n" +
 			"/monthly-hours: 月間出勤時間\n" +
+			"/edit-attendance <ID> <時刻>: 勤怠記録の編集\n" +
+			"/delete-attendance <ID>: 勤怠記録の削除\n" +
 			"/help-attendance: ヘルプ"
 	default:
 		message = "不明なコマンドです。"
@@ -167,9 +206,24 @@ func FormatAttendance(logs []domain.AttendanceLog, workplaceName string) string 
 		for _, p := range pairs {
 			h := int(p.dur.Hours())
 			m := int(p.dur.Minutes()) % 60
-			sb.WriteString(fmt.Sprintf("・出勤 %02d:%02d / 退勤 %02d:%02d（%d時間%d分）\n",
-				p.start.Hour(), p.start.Minute(),
-				p.end.Hour(), p.end.Minute(),
+
+			// IDを表示するためにイベントリストから該当するIDを取得
+			var startID, endID string
+
+			// ログから対応するIDを検索
+			for _, log := range logs {
+				logTime := parseTime(log.Timestamp)
+				if logTime.Equal(p.start) && log.Action == "start" {
+					startID = log.ID
+				}
+				if logTime.Equal(p.end) && log.Action == "end" {
+					endID = log.ID
+				}
+			}
+
+			sb.WriteString(fmt.Sprintf("・出勤 %02d:%02d (ID:%s) / 退勤 %02d:%02d (ID:%s)（%d時間%d分）\n",
+				p.start.Hour(), p.start.Minute(), startID,
+				p.end.Hour(), p.end.Minute(), endID,
 				h, m))
 		}
 		hTotal := int(dayTotal.Hours())
@@ -184,4 +238,12 @@ func FormatAttendance(logs []domain.AttendanceLog, workplaceName string) string 
 	sb.WriteString(fmt.Sprintf("月間合計勤務時間: %d時間%d分\n", totalH, totalM))
 
 	return sb.String()
+}
+
+func parseTime(timestamp string) time.Time {
+	const layout = "2006-01-02 15:04:05.999999999 -0700 MST"
+	re := regexp.MustCompile(` m=\+.*$`)
+	cleaned := re.ReplaceAllString(timestamp, "")
+	t, _ := time.Parse(layout, cleaned)
+	return t
 }

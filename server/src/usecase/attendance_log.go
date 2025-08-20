@@ -75,3 +75,21 @@ func (r *Repository) GetAttendanceLogListByUserAndMonth(ctx context.Context, tea
 
 	return result, nil
 }
+
+func (r *Repository) UpdateAttendanceLog(ctx context.Context, id string, newTimestamp time.Time) (*domain.AttendanceLog, error) {
+	result, err := r.attendanceLogRepository.attendanceLogRepository.DBUpdateAttendanceLog(ctx, id, newTimestamp)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (r *Repository) DeleteAttendanceLog(ctx context.Context, id string) error {
+	err := r.attendanceLogRepository.attendanceLogRepository.DBDeleteAttendanceLog(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
