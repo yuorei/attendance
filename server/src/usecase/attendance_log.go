@@ -86,7 +86,7 @@ func (r *Repository) UpdateAttendanceLog(ctx context.Context, id string, newTime
 }
 
 func (r *Repository) DeleteAttendanceLog(ctx context.Context, id string) error {
-	err := r.attendanceLogRepository.attendanceLogRepository.DBDeleteAttendanceLog(ctx, id)
+	err := r.attendanceLogRepository.DBDeleteAttendanceLog(ctx, id)
 	if err != nil {
 		return err
 	}
