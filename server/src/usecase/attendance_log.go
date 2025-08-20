@@ -77,7 +77,7 @@ func (r *Repository) GetAttendanceLogListByUserAndMonth(ctx context.Context, tea
 }
 
 func (r *Repository) UpdateAttendanceLog(ctx context.Context, id string, newTimestamp time.Time) (*domain.AttendanceLog, error) {
-	result, err := r.attendanceLogRepository.attendanceLogRepository.DBUpdateAttendanceLog(ctx, id, newTimestamp)
+	result, err := r.attendanceLogRepository.DBUpdateAttendanceLog(ctx, id, newTimestamp)
 	if err != nil {
 		return nil, err
 	}
