@@ -33,6 +33,7 @@ func NewRouter() *echoadapter.EchoLambda {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(middleware.CORS())
 
 	// OpenTelemetry Echoミドルウェア
 	// otelServiceName := os.Getenv("OTEL_SERVICE_NAME")
@@ -42,6 +43,15 @@ func NewRouter() *echoadapter.EchoLambda {
 	e.GET("/health", handler.HealthCheck)
 	// e.GET("/attendance/:workplace_id/:year/:month", handler.AttendanceLogListByUserAndMonth)
 	e.POST("/slack/slash/attendance", handler.AttendanceSlach)
+
+	// REST API endpoints that mirror Slack functionality
+	api := e.Group("/api/v1")
+	api.POST("/attendance/check-in", handler.CheckIn)
+	api.POST("/attendance/check-out", handler.CheckOut)
+	api.POST("/attendance/workplace/subscribe", handler.SubscribeWorkplace)
+	api.GET("/attendance/monthly", handler.GetMonthlyHours)
+	api.PUT("/attendance/edit", handler.EditAttendance)
+	api.DELETE("/attendance/:id", handler.DeleteAttendance)
 
 	if os.Getenv("ENV") == "local" {
 		e.Logger.Fatal(e.Start(":8080"))
