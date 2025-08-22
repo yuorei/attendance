@@ -1,6 +1,6 @@
 import type { Route } from "./+types/attendance.$id";
 import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useParams, useLoaderData } from "react-router";
 
 type AttendanceRecord = {
   UserID: string;
@@ -18,6 +18,12 @@ type UserAttendanceDetail = {
   CheckOutTime?: string;
 };
 
+export async function loader({ context }: Route.LoaderArgs) {
+  return {
+    apiUrl: context.cloudflare.env.VITE_API_URL || "",
+  };
+}
+
 export function meta({ params }: Route.MetaArgs) {
   return [
     { title: `出勤記録詳細 - ${params.id} - 勤怠管理システム` },
@@ -27,6 +33,7 @@ export function meta({ params }: Route.MetaArgs) {
 
 export default function AttendanceDetail() {
   const { id } = useParams();
+  const { apiUrl } = useLoaderData<typeof loader>();
   const [userDetail, setUserDetail] = useState<UserAttendanceDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(
@@ -41,7 +48,7 @@ export default function AttendanceDetail() {
     if (!id) return;
     setLoading(true);
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_URL;
+      const apiBaseUrl = apiUrl;
       const params = new URLSearchParams({ id, date: selectedDate });
       const response = await fetch(`${apiBaseUrl}/api/v1/attendance/detail?${params}`);
       if (!response.ok) {

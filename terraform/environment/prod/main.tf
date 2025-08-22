@@ -28,11 +28,14 @@ module "lambda" {
   runtime       = "provided.al2023"
   filename      = var.lambda_zip_path # 先に zip 済みバイナリを配置
   environment_variables = {
-    TABLE_NAME        = module.dynamodb.table_name
-    OTEL_ENDPOINT     = var.otel_endpoint
-    OTEL_TOKEN        = var.otel_token
-    OTEL_SERVICE_NAME = "${var.lambda_function_name}-${var.env}"
-    ENV               = var.env
+    TABLE_NAME          = module.dynamodb.table_name
+    OTEL_ENDPOINT       = var.otel_endpoint
+    OTEL_TOKEN          = var.otel_token
+    OTEL_SERVICE_NAME   = "${var.lambda_function_name}-${var.env}"
+    ENV                 = var.env
+    SLACK_CLIENT_ID     = var.slack_client_id
+    SLACK_CLIENT_SECRET = var.slack_client_secret
+    SLACK_REDIRECT_URI  = var.slack_redirect_uri
   }
   dynamodb_stream_arn = module.dynamodb.stream_arn
   tags                = var.tags

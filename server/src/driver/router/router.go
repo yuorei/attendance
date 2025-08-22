@@ -44,6 +44,11 @@ func NewRouter() *echoadapter.EchoLambda {
 	// e.GET("/attendance/:workplace_id/:year/:month", handler.AttendanceLogListByUserAndMonth)
 	e.POST("/slack/slash/attendance", handler.AttendanceSlach)
 
+	// Slack OAuth endpoints
+	e.GET("/auth/slack", handler.SlackOAuthLogin)
+	e.GET("/auth/slack/callback", handler.SlackOAuthCallback)
+	e.GET("/api/v1/slack/channels", handler.GetSlackChannels)
+
 	// REST API endpoints that mirror Slack functionality
 	api := e.Group("/api/v1")
 	api.POST("/attendance/check-in", handler.CheckIn)

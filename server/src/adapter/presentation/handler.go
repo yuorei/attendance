@@ -1,7 +1,13 @@
 package presentation
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"net/url"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -246,6 +252,227 @@ func (h *Handler) DeleteAttendance(c echo.Context) error {
 	return c.JSON(http.StatusOK, AttendanceResponse{
 		Message: "勤怠記録を削除しました ID: " + id,
 		Success: true,
+	})
+}
+
+type SlackOAuthResponse struct {
+	Ok          bool   `json:"ok"`
+	AccessToken string `json:"access_token"` // Bot Token
+	Scope       string `json:"scope"`
+	Team        struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"team"`
+	AuthedUser struct {
+		ID          string `json:"id"`
+		AccessToken string `json:"access_token"` // User Token
+	} `json:"authed_user"`
+	Error string `json:"error,omitempty"`
+}
+
+type SlackUserResponse struct {
+	Ok   bool `json:"ok"`
+	User struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"user"`
+	Error string `json:"error,omitempty"`
+}
+
+type SlackChannel struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	IsGroup bool   `json:"is_group"`
+	IsMember bool  `json:"is_member"`
+}
+
+type SlackChannelsResponse struct {
+	Ok       bool           `json:"ok"`
+	Channels []SlackChannel `json:"channels"`
+	Groups   []SlackChannel `json:"groups"`
+	// conversations.list API では conversations フィールドを使用
+	Conversations []SlackChannel `json:"conversations"`
+	Error         string         `json:"error,omitempty"`
+}
+
+func (h *Handler) SlackOAuthCallback(c echo.Context) error {
+	code := c.QueryParam("code")
+	// state := c.QueryParam("state")
+	error := c.QueryParam("error")
+
+	if error != "" {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error":   error,
+			"message": "Slack認証がキャンセルされました",
+		})
+	}
+
+	if code == "" {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error":   "missing_code",
+			"message": "認証コードが不足しています",
+		})
+	}
+
+	clientID := os.Getenv("SLACK_CLIENT_ID")
+	clientSecret := os.Getenv("SLACK_CLIENT_SECRET")
+	redirectURI := os.Getenv("SLACK_REDIRECT_URI")
+
+	if clientID == "" || clientSecret == "" || redirectURI == "" {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error":   "config_error",
+			"message": "Slack OAuth設定が不足しています",
+		})
+	}
+
+	data := url.Values{}
+	data.Set("client_id", clientID)
+	data.Set("client_secret", clientSecret)
+	data.Set("code", code)
+	data.Set("redirect_uri", redirectURI)
+
+	resp, err := http.PostForm("https://slack.com/api/oauth.v2.access", data)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error":   "oauth_request_failed",
+			"message": "OAuth認証リクエストに失敗しました: " + err.Error(),
+		})
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error":   "response_read_failed",
+			"message": "レスポンスの読み込みに失敗しました: " + err.Error(),
+		})
+	}
+
+	var oauthResp SlackOAuthResponse
+	if err := json.Unmarshal(body, &oauthResp); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error":   "json_parse_failed",
+			"message": "レスポンスのパースに失敗しました: " + err.Error(),
+		})
+	}
+
+	if !oauthResp.Ok {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error":   oauthResp.Error,
+			"message": "Slack認証に失敗しました: " + oauthResp.Error,
+		})
+	}
+
+	// OAuth v2 では追加の users.info 呼び出しは不要
+	// 必要に応じて後でユーザー名を取得できるが、基本情報は OAuth レスポンスに含まれる
+	session := map[string]interface{}{
+		"user_id":       oauthResp.AuthedUser.ID,
+		"team_id":       oauthResp.Team.ID,
+		"team_name":     oauthResp.Team.Name,
+		"user_name":     oauthResp.AuthedUser.ID, // 一時的にユーザーIDを使用
+		"scope":         oauthResp.Scope,
+		"access_token":  oauthResp.AccessToken, // Bot Token (チャンネル情報取得用)
+		"user_token":    oauthResp.AuthedUser.AccessToken, // User Token
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"success": true,
+		"message": "認証が完了しました",
+		"session": session,
+	})
+}
+
+func (h *Handler) SlackOAuthLogin(c echo.Context) error {
+	clientID := os.Getenv("SLACK_CLIENT_ID")
+	redirectURI := os.Getenv("SLACK_REDIRECT_URI")
+
+	if clientID == "" || redirectURI == "" {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error":   "config_error",
+			"message": "Slack OAuth設定が不足しています",
+		})
+	}
+
+	scopes := []string{"channels:read", "groups:read", "channels:history", "groups:history"}
+	state := fmt.Sprintf("%d", time.Now().Unix())
+
+	authURL := fmt.Sprintf(
+		"https://slack.com/oauth/v2/authorize?client_id=%s&scope=%s&redirect_uri=%s&state=%s",
+		clientID,
+		url.QueryEscape(strings.Join(scopes, ",")),
+		url.QueryEscape(redirectURI),
+		state,
+	)
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"auth_url": authURL,
+		"state":    state,
+	})
+}
+
+func (h *Handler) GetSlackChannels(c echo.Context) error {
+	accessToken := c.QueryParam("access_token")
+	if accessToken == "" {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error":   "missing_access_token",
+			"message": "アクセストークンが必要です",
+		})
+	}
+
+	// パブリックチャンネルを取得
+	channelsReq, err := http.NewRequest("GET", "https://slack.com/api/conversations.list?types=public_channel,private_channel", nil)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error":   "channels_request_creation_failed",
+			"message": "チャンネル一覧リクエストの作成に失敗しました: " + err.Error(),
+		})
+	}
+	channelsReq.Header.Set("Authorization", "Bearer "+accessToken)
+	
+	client := &http.Client{}
+	channelsResp, err := client.Do(channelsReq)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error":   "channels_request_failed",
+			"message": "チャンネル一覧の取得に失敗しました: " + err.Error(),
+		})
+	}
+	defer channelsResp.Body.Close()
+
+	channelsBody, err := io.ReadAll(channelsResp.Body)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error":   "channels_response_read_failed",
+			"message": "チャンネル一覧レスポンスの読み込みに失敗しました: " + err.Error(),
+		})
+	}
+
+	var slackChannelsResp SlackChannelsResponse
+	if err := json.Unmarshal(channelsBody, &slackChannelsResp); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error":   "channels_json_parse_failed",
+			"message": "チャンネル一覧のパースに失敗しました: " + err.Error(),
+		})
+	}
+
+	if !slackChannelsResp.Ok {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error":   slackChannelsResp.Error,
+			"message": "チャンネル一覧の取得に失敗しました: " + slackChannelsResp.Error,
+		})
+	}
+
+	// conversations.list API では conversations フィールドを使用
+	channels := slackChannelsResp.Conversations
+	if len(channels) == 0 {
+		// フォールバック: 古い形式も確認
+		channels = slackChannelsResp.Channels
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"success":  true,
+		"channels": channels,
+		"message":  fmt.Sprintf("チャンネル一覧を取得しました (%d件)", len(channels)),
 	})
 }
 

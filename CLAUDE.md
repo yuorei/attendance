@@ -43,7 +43,8 @@ The application follows Clean Architecture with these layers:
 - **Deployment**: AWS Lambda with API Gateway
 - **Infrastructure**: Terraform modules for Lambda, DynamoDB, API Gateway
 - **Observability**: OpenTelemetry (currently commented out in Lambda due to tracing issues)
-- **Integration**: Slack API for slash commands
+- **Integration**: Slack API for slash commands and OAuth authentication
+- **Frontend**: React Router 7 with TypeScript and Tailwind CSS on Cloudflare Workers
 
 ## Database Schema
 
@@ -64,12 +65,69 @@ The application follows Clean Architecture with these layers:
 - DynamoDB operations use AWS SDK v2 with attribute value marshaling
 - OpenTelemetry integration prepared but disabled in Lambda environment
 
+## Authentication
+
+The system now supports Slack OAuth authentication for web access:
+- Users can log in with their Slack account via `/login` route
+- Authentication provides team_id, user_id, access_token, and channel access
+- Dynamic channel selection: users can choose any accessible Slack channel
+- Selected channel information is stored in localStorage for persistence
+- Session data is stored in localStorage for frontend state management
+- Protected routes require authentication to access attendance data
+
+## API Endpoints
+
+### Authentication
+- `GET /auth/slack` - Initiate Slack OAuth flow
+- `GET /auth/slack/callback` - Handle OAuth callback and return user session
+- `GET /api/v1/slack/channels` - Get accessible Slack channels for authenticated user
+
+### Attendance API
+- `POST /api/v1/attendance/check-in` - Record check-in
+- `POST /api/v1/attendance/check-out` - Record check-out  
+- `GET /api/v1/attendance/monthly` - Get monthly attendance records
+- `PUT /api/v1/attendance/edit` - Edit existing attendance record
+- `DELETE /api/v1/attendance/:id` - Delete attendance record
+- `POST /api/v1/attendance/workplace/subscribe` - Subscribe to workplace
+
+### Legacy Slack Integration
+- `POST /slack/slash/attendance` - Slack slash command handler
+
 ## Environment Variables
 
 Required for deployment:
 - `OTEL_ENDPOINT` - OpenTelemetry collector endpoint
 - `OTEL_TOKEN` - Authentication token for telemetry
 - `ENV` - Environment identifier (local/dev/prod)
+- `SLACK_CLIENT_ID` - Slack OAuth Client ID for web authentication
+- `SLACK_CLIENT_SECRET` - Slack OAuth Client Secret for web authentication  
+- `SLACK_REDIRECT_URI` - Slack OAuth redirect URI (e.g., https://your-api-gateway-url/auth/slack/callback)
+
+## Frontend Routes
+
+- `/` - Home page with system overview and login options
+- `/login` - Slack OAuth login page
+- `/auth/callback` - OAuth callback processing page  
+- `/attendance` - Protected attendance records dashboard
+- `/attendance/:id` - Individual user attendance details
+
+## Deployment Notes
+
+### Slack App Configuration
+To enable OAuth authentication, configure your Slack app with:
+1. OAuth Redirect URLs: Add your API Gateway callback URL
+2. OAuth Scopes: `users:read`, `channels:read`, `groups:read`, `channels:history`, `groups:history`
+3. Set Client ID and Secret in Terraform variables
+
+### Channel Management
+- Users can dynamically select from their accessible Slack channels
+- Channel selection persists across sessions
+- Attendance records are tied to the selected channel
+- Real-time channel switching without re-authentication
+
+### Frontend Deployment
+The React frontend is deployed on Cloudflare Workers and requires:
+- `VITE_API_URL` environment variable pointing to your API Gateway endpoint
 
 ## Testing
 

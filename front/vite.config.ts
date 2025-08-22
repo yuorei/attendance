@@ -11,4 +11,9 @@ export default defineConfig({
     reactRouter(),
     tsconfigPaths(),
   ],
+  server: {
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8'
+    }
+  }
 });
