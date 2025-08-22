@@ -32,7 +32,6 @@ export default function ChannelSelector({
   }, [accessToken]);
 
   const fetchChannels = async () => {
-    console.log('fetchChannels called with accessToken:', accessToken);
     if (!accessToken) {
       console.log('No access token, returning early');
       return;
