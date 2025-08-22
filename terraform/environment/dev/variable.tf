@@ -81,6 +81,24 @@ variable "otel_token" {
   description = "OpenTelemetryのトークン"
 }
 
+variable "slack_client_id" {
+  type        = string
+  description = "Slack OAuth Client ID"
+  sensitive   = true
+}
+
+variable "slack_client_secret" {
+  type        = string
+  description = "Slack OAuth Client Secret"
+  sensitive   = true
+}
+
+variable "slack_redirect_uri" {
+  type        = string
+  description = "Slack OAuth Redirect URI"
+  default     = "https://your-api-gateway-url/auth/slack/callback"
+}
+
 variable "tags" {
   description = "共通のタグ"
   type        = map(string)

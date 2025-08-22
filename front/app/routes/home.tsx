@@ -62,15 +62,29 @@ export default function Home() {
         </div>
 
         <div className="text-center">
-          <Link
-            to="/attendance"
-            className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition-all duration-200 shadow-lg hover:shadow-xl"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-            出勤記録を確認
-          </Link>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link
+              to="/login"
+              className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none">
+                <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52-2.523c0-1.395 1.13-2.525 2.52-2.525s2.523 1.13 2.523 2.525A2.528 2.528 0 0 1 5.042 15.165z" fill="#E01E5A"/>
+                <path d="M5.042 12.642c0-.668.54-1.21 1.21-1.21h3.897c1.458 0 2.64-1.18 2.64-2.637V5.042c0-1.392 1.13-2.52 2.523-2.52a2.528 2.528 0 0 1 2.52 2.52c0 1.393-1.13 2.523-2.52 2.523z" fill="#36C5F0"/>
+                <path d="M8.685 18.915c0-.668-.54-1.21-1.21-1.21H5.042c-1.458 0-2.64 1.18-2.64 2.637v3.753c0 1.392 1.13 2.52 2.523 2.52a2.528 2.528 0 0 1 2.52-2.52c0-1.393-1.13-2.523-2.52-2.523z" fill="##2EB67D"/>
+                <path d="M18.958 8.835a2.528 2.528 0 0 1 2.52 2.523c0 1.395-1.13 2.525-2.52 2.525s-2.523-1.13-2.523-2.525A2.528 2.528 0 0 1 18.958 8.835z" fill="#ECB22E"/>
+              </svg>
+              Slackでログイン
+            </Link>
+            <Link
+              to="/attendance"
+              className="inline-flex items-center px-8 py-4 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+              出勤記録を確認
+            </Link>
+          </div>
         </div>
 
         <div className="mt-16 bg-white rounded-xl shadow-lg p-8">
