@@ -64,7 +64,6 @@ export default function ChannelSelector({
       };
 
       const data = (await response.json()) as ChannelsResponse;
-      console.log('Channels response data:', data);
 
       if (data.success && data.channels) {
         setChannels(data.channels);
