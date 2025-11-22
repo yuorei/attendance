@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 import { useLoaderData } from "react-router";
 
 export async function loader({ context }: Route.LoaderArgs) {
-  return {
-    apiUrl: context.cloudflare.env.VITE_API_URL || "",
-  };
+  const apiUrl = context.cloudflare.env.VITE_API_URL;
+  if (!apiUrl) {
+    throw new Response("VITE_API_URL is not configured", { status: 500 });
+  }
+  return { apiUrl };
 }
 
 export function meta({}: Route.MetaArgs) {
