@@ -312,6 +312,29 @@ func (i *Infrastructure) DBUpdateAttendanceLog(ctx context.Context, id string, n
 	return &updatedLog, nil
 }
 
+func (i *Infrastructure) DBGetWorkplaceBindingsByUser(ctx context.Context, teamID, userID string) ([]domain.WorkplaceBindings, error) {
+	input := &dynamodb.ScanInput{
+		TableName:        aws.String(tableWorkplaceBindings),
+		FilterExpression: aws.String("team_id = :teamId AND user_id = :userId"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":teamId": &types.AttributeValueMemberS{Value: teamID},
+			":userId": &types.AttributeValueMemberS{Value: userID},
+		},
+	}
+
+	output, err := i.db.Database.Scan(ctx, input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan WorkplaceBindings: %w", err)
+	}
+
+	var bindings []domain.WorkplaceBindings
+	if err := attributevalue.UnmarshalListOfMaps(output.Items, &bindings); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal WorkplaceBindings: %w", err)
+	}
+
+	return bindings, nil
+}
+
 func (i *Infrastructure) DBDeleteAttendanceLog(ctx context.Context, id string) error {
 	deleteInput := &dynamodb.DeleteItemInput{
 		TableName: aws.String(tableAttendanceLog),

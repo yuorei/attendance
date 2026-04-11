@@ -43,6 +43,8 @@ func NewRouter() *echoadapter.EchoLambda {
 	e.GET("/health", handler.HealthCheck)
 	// e.GET("/attendance/:workplace_id/:year/:month", handler.AttendanceLogListByUserAndMonth)
 	e.POST("/slack/slash/attendance", handler.AttendanceSlach)
+	e.POST("/slack/actions", handler.SlackInteractiveAction)
+	e.POST("/slack/events", handler.SlackEvents)
 
 	// Slack OAuth endpoints
 	e.GET("/auth/slack", handler.SlackOAuthLogin)

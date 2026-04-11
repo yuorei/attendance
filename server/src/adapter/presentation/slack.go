@@ -13,6 +13,25 @@ import (
 	"github.com/yuorei/attendance/src/domain"
 )
 
+func attendanceMenuBlocks() slack.Blocks {
+	return slack.Blocks{
+		BlockSet: []slack.Block{
+			slack.NewSectionBlock(
+				slack.NewTextBlockObject("mrkdwn", "*勤怠管理メニュー*\n以下から操作を選択してください", false, false),
+				nil, nil,
+			),
+			slack.NewActionBlock("attendance_actions",
+				slack.NewButtonBlockElement("check_in", "check_in",
+					slack.NewTextBlockObject("plain_text", "出勤", true, false)),
+				slack.NewButtonBlockElement("check_out", "check_out",
+					slack.NewTextBlockObject("plain_text", "退勤", true, false)),
+				slack.NewButtonBlockElement("monthly_report", "monthly_report",
+					slack.NewTextBlockObject("plain_text", "今月の勤怠", true, false)),
+			),
+		},
+	}
+}
+
 func (h *Handler) AttendanceSlach(c echo.Context) error {
 	const START = "start"
 	const END = "end"
@@ -24,6 +43,10 @@ func (h *Handler) AttendanceSlach(c echo.Context) error {
 	}
 	var message string
 	switch s.Command {
+	case "/attendance", "/attendance-dev":
+		return c.JSON(http.StatusOK, slack.Msg{
+			Blocks: attendanceMenuBlocks(),
+		})
 	case "/start-work", "/start-work-dev":
 		attendanceLog, err := h.usecase.AddAttendanceLogStart(c.Request().Context(), s.TeamID, s.ChannelID, s.UserID, START)
 		if err != nil {
