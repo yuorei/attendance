@@ -93,3 +93,12 @@ func (r *Repository) DeleteAttendanceLog(ctx context.Context, id string) error {
 
 	return nil
 }
+
+func (r *Repository) GetWorkplaceBindingsByUser(ctx context.Context, teamId, userId string) ([]domain.WorkplaceBindings, error) {
+	result, err := r.attendanceLogRepository.attendanceLogRepository.DBGetWorkplaceBindingsByUser(ctx, teamId, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
